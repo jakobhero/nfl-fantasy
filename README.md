@@ -7,6 +7,9 @@ This project was implemented in a dev environment inside a dev container. To rep
 ## Functionalities
 The following functionalities are implemented:
 ### Determine Draft Order
-In order to determine the draft order, run `python draft_order.py`. The script reads the players provided in `data/players.csv` and writes the resulting order to `data/draft_order.csv`. You can specify the seed by passing it as positional argument, e.g. `python draft_order.py --seed 25` to set the seed value to 25.
+In order to determine the draft order, run `python draft_order.py`. The script reads the players provided in `data/players.csv` and writes the resulting order to `data/draft_order.csv`. You can specify the seed by passing it as named argument, e.g. `python draft_order.py --seed 25` to set the seed value to 25.
 ### Assign Divisions
-In order to assign divisions, run `python division_draw.py`. The script reads the players and division names provided in the respective `.csv`s in `/data` and writes the resulting mapping of players to divisions to `data/division_mapping.csv`. You can specify the seed by passing it as positional argument, e.g. `python division_draw.py --seed 25` to set the seed value to 25.
+In order to assign divisions, run `python division_draw.py`. The script reads the players and division names provided in the respective `.csv`s in `/data` and writes the resulting mapping of players to divisions to `data/division_mapping.csv`. You can specify the seed by passing it as named argument, e.g. `python division_draw.py --seed 25` to set the seed value to 25.
+### Create Schedule
+In order to create a schedule, run `python schedule_draw.py`. The script reads the assignment of players to divisions in `data/division_mapping.csv` and writes a schedule to `data/schedule.csv`. You can specify the seed by passing it as named argument, e.g. `python schedule_draw.py --seed 25` to set the seed value to 25.
+ 
