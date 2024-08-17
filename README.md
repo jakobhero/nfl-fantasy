@@ -7,4 +7,4 @@ This project was implemented in a dev environment inside a dev container. To rep
 ## Functionalities
 The following functionalities are implemented:
 ### Determine Draft Order
-In order to determine the draft order, run `python draft_order.py`. The script reads the players provided in `data/players.csv` and writes the resulting order to `data/draft_order.csv`. You can specify the seed by passing it as poitional argument, e.g. `python draft_order.py 25` to set the seed value to 25.
+In order to determine the draft order, run `python draft_order.py`. The script reads the players provided in `data/players.csv` and writes the resulting order to `data/draft_order.csv`. You can specify the seed by passing it as poitional argument, e.g. `python draft_order.py --seed 25` to set the seed value to 25.

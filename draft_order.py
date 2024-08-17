@@ -5,7 +5,7 @@ import argparse
 if __name__ == '__main__':
     #read seed value from command line argument
     parser = argparse.ArgumentParser()
-    parser.add_argument('seed', type=int, default=0)
+    parser.add_argument('--seed', type=int, default=0)
     args = parser.parse_args()
     
     #configure seed
