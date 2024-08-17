@@ -1,2 +1,10 @@
-# nfl-fantasy
-Contains scripts to draw draft order, divisions, and schedule for NFL fantasy
+# NFL Fantasy
+This Repository contains scripts to draw draft order, divisions, and schedule for NFL fantasy.
+## Getting Started
+This project was implemented in a dev environment inside a dev container. To reproduce the dev environment, follow these steps:
+1. Prerequisites are a Docker daemon and VS Code
+2. Install the devcontainer extension from the VS Code marketplace and then select Dev Containers: Reopen in Container in the command palette with this repository open.
+## Functionalities
+The following functionalities are implemented:
+### Determine Draft Order
+In order to determine the draft order, run `python draft_order.py`. The script reads the players provided in `data/players.csv` and writes the resulting order to `data/draft_order.csv`. You can specify the seed by passing it as poitional argument, e.g. `python draft_order.py 25` to set the seed value to 25.
