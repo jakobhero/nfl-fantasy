@@ -1,5 +1,7 @@
 FROM python:3.9.19-bookworm
 
+RUN pip install poetry==1.85
+
 COPY . .
 
-RUN pip install -r requirements.txt
+RUN poetry install
