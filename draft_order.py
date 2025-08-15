@@ -16,4 +16,6 @@ if __name__ == '__main__':
     players_list = list(players_df['player'])
     order = [(pos+1, player) for pos, player in enumerate(random.sample(players_list, len(players_list)))]
     order_df = pd.DataFrame(order, columns=['position', 'player'])
+    for pick in order_df.to_dict(orient='records'):
+        print(f'Pick #{pick["position"]}: {pick["player"]}') 
     order_df.to_csv('data/draft_order.csv', index=False)
