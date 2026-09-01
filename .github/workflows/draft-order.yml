@@ -1,19 +1,22 @@
 name: Generate Draft Order
 
+# the draw only runs once the roster has landed on main, so a pull request
+# cannot preview the order it would produce
 on:
   push:
     branches: [ main, master ]
     paths:
       - 'data/players.csv'
-  pull_request:
-    branches: [ main, master ]
-    paths:
-      - 'data/players.csv'
+
+# the repository default for the workflow token is read-only, which makes the
+# git push in the commit step fail fatally with exit code 128
+permissions:
+  contents: write
 
 jobs:
   generate-draft-order:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -73,13 +76,19 @@ jobs:
         echo "================================"
         
         poetry run python draft_order.py --seed ${{ steps.seed.outputs.seed }}
-        
+
+    - name: Record season seed
+      run: |
+        # persist the seed so the division and schedule draws can be run locally
+        # against the exact same season seed, without copying it out of these logs
+        echo "${{ steps.seed.outputs.seed }}" > data/seed.txt
+        cat data/seed.txt
+
     - name: Commit draft order changes
-      if: github.event_name == 'push'
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add data/draft_order.csv
+        git add data/draft_order.csv data/seed.txt
         if git diff --staged --quiet; then
           echo "No changes to commit"
         else

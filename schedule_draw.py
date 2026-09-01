@@ -3,6 +3,8 @@ import pandas as pd
 import argparse
 import time
 
+from season_seed import resolve_seed
+
 def assign_pairings_to_weeks(assignable_weeks, players_list, pairings, seed):
     random.seed(seed)
     attempt = 1
@@ -32,26 +34,38 @@ def assign_pairings_to_weeks(assignable_weeks, players_list, pairings, seed):
             continue
 
 if __name__ == '__main__':
-    #read seed value from command line argument
+    #read seed value from command line argument, defaults to the committed season seed
     parser = argparse.ArgumentParser()
-    parser.add_argument('--seed', type=int, default=0)
+    parser.add_argument('--seed', type=int, default=None)
     args = parser.parse_args()
-    
+
+    base_seed, draw_seed = resolve_seed('schedule', args.seed)
+    print(f'Season seed: {base_seed} (schedule draw seed: {draw_seed})')
+
     division_mapping_df = pd.read_csv('data/division_mapping.csv')
     players_list = list(division_mapping_df.player)
     division_count = len(division_mapping_df.division.unique())
+
+    #every player is paired up every week, so an odd roster can never fill a week and
+    #assign_pairings_to_weeks would keep retrying with new seeds forever
+    if len(players_list) % 2 != 0:
+        raise SystemExit(
+            f'Cannot draw a schedule: {len(players_list)} players cannot be paired up evenly. '
+            'Adjust data/players.csv and rerun the division draw.'
+        )
+
     full_schedule = []
-    
+
     #create first part of schedule
     pairings = [(players_list[i], players_list[j]) for i in range(len(players_list)) for j in range(i + 1, len(players_list))]
-    schedule_first_part = assign_pairings_to_weeks(range(1, len(players_list)), players_list, pairings, args.seed)
+    schedule_first_part = assign_pairings_to_weeks(range(1, len(players_list)), players_list, pairings, draw_seed)
     full_schedule += schedule_first_part
     
     #create second part of schedule
     division_dict ={row.player: row.division for row in division_mapping_df.itertuples()}
     week_range = range(len(players_list), len(players_list) + int(len(players_list) / division_count - 1))
     pairings = [(players_list[i], players_list[j]) for i in range(len(players_list)) for j in range(i + 1, len(players_list)) if division_dict[players_list[i]] == division_dict[players_list[j]]]
-    schedule_second_part = assign_pairings_to_weeks(week_range, players_list, pairings, args.seed)
+    schedule_second_part = assign_pairings_to_weeks(week_range, players_list, pairings, draw_seed)
     full_schedule += schedule_second_part
     
     schedule_df = pd.DataFrame(full_schedule, columns = ['week', 'pairing'])

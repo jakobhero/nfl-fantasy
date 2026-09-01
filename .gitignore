@@ -23,3 +23,6 @@ venv.bak/
 # OS
 .DS_Store
 Thumbs.db
+
+# Draft prep scratch work (rankings, notebooks)
+draft_prep/
