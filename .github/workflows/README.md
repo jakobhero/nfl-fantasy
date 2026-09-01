@@ -6,6 +6,9 @@ The `draft-order.yml` workflow automatically generates a new draft order wheneve
 
 ### Trigger Conditions
 - Push to `main` or `master` branch that includes changes to `data/players.csv`
+- Manually, via the Run workflow button on the Actions tab or `gh workflow run draft-order.yml`
+
+The manual trigger matters because the roster change is normally what starts the draw: if a run fails for an unrelated reason, the roster has already landed and there is nothing left to retrigger it.
 
 The draw deliberately does not run on pull requests — the order is only drawn once the roster has landed on `main`.
 
