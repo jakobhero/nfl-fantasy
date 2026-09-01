@@ -13,7 +13,7 @@ The draw deliberately does not run on pull requests — the order is only drawn 
 The workflow needs `contents: write` to push its commit. The repository default for the workflow token is read-only, under which the `git push` fails fatally with exit code 128.
 
 ### What It Does
-1. **Sets up the environment**: Python 3.9 + Poetry with all dependencies
+1. **Sets up the environment**: uv provisions the Python pinned in `.python-version` plus the locked dependencies
 2. **Generates a deterministic seed**: Combines commit hash and runtime timestamp
 3. **Runs draft order generation**: Executes `draft_order.py` with the generated seed
 4. **Logs all information**: Prints commit hash, timestamp, seed, and draft order output
