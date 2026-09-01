@@ -1,15 +1,11 @@
 name: Generate Draft Order
 
-# the draw only runs once the roster has landed on main, so a pull request
-# cannot preview the order it would produce
+# the draw is deliberately not coupled to a file changing: a roster edit made for
+# any other reason must not redraw the order. it runs when a pull request carrying
+# the draw-order label is merged, so the draw is always something someone asked for
 on:
-  push:
-    branches: [ main, master ]
-    paths:
-      - 'data/players.csv'
-  # the roster change is what normally triggers the draw, so a run that fails for
-  # an unrelated reason leaves nothing to retrigger it. this redraws on demand
-  workflow_dispatch:
+  pull_request:
+    types: [closed]
 
 # the repository default for the workflow token is read-only, which makes the
 # git push in the commit step fail fatally with exit code 128
@@ -19,11 +15,17 @@ permissions:
 jobs:
   generate-draft-order:
     runs-on: ubuntu-latest
+    if: >-
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'draw-order')
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v7
       with:
+        # a closed pull request points github.ref at the merge ref, which cannot be
+        # pushed to, so check out the branch the pull request was merged into
+        ref: ${{ github.event.pull_request.base.ref }}
         token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Install uv
@@ -65,23 +67,19 @@ jobs:
         echo "Generated Seed: ${{ steps.seed.outputs.seed }}"
         echo "================================"
         
+        # the script records the seed alongside the order it produced, and refuses to
+        # overwrite a season that has already been drawn
         uv run python draft_order.py --seed ${{ steps.seed.outputs.seed }}
-
-    - name: Record season seed
-      run: |
-        # persist the seed so the division and schedule draws can be run locally
-        # against the exact same season seed, without copying it out of these logs
-        echo "${{ steps.seed.outputs.seed }}" > data/seed.txt
-        cat data/seed.txt
 
     - name: Commit draft order changes
       run: |
+        SEASON=$(cat data/season.txt)
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add data/draft_order.csv data/seed.txt
+        git add "data/$SEASON"
         if git diff --staged --quiet; then
           echo "No changes to commit"
         else
-          git commit -m "Auto-generate draft order from players.csv changes [skip ci]"
+          git commit -m "Draw draft order for the $SEASON season [skip ci]"
           git push
         fi 
