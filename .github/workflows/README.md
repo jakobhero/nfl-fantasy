@@ -2,44 +2,40 @@
 
 ## Draft Order Generation
 
-The `draft-order.yml` workflow automatically generates a new draft order whenever the `data/players.csv` file is modified.
+The `draft-order.yml` workflow draws the draft order for the season named in `data/season.txt`.
 
 ### Trigger Conditions
-- Push to `main` or `master` branch that includes changes to `data/players.csv`
-- Manually, via the Run workflow button on the Actions tab or `gh workflow run draft-order.yml`
+The draw runs when a pull request carrying the **`draw-order`** label is merged into `main`.
 
-The manual trigger matters because the roster change is normally what starts the draw: if a run fails for an unrelated reason, the roster has already landed and there is nothing left to retrigger it.
+It is deliberately not coupled to a file changing. Triggering on edits to `data/players.csv` meant that any roster edit — fixing a typo, renaming a team mid-season — would redraw the order and commit over it, and that a run failing for an unrelated reason left nothing to retrigger it, because the roster had already landed. The label makes the draw something someone explicitly asked for, and it survives squash and rebase merges, which a branch-name convention would not.
 
-The draw deliberately does not run on pull requests — the order is only drawn once the roster has landed on `main`.
+To rerun a draw that failed for an infrastructure reason, use Re-run jobs on the run itself — it replays the same merge event.
+
+### What It Does
+1. **Sets up the environment**: uv provisions the Python pinned in `.python-version` plus the locked dependencies
+2. **Generates a seed**: Combines the merge commit hash and the runtime timestamp
+3. **Runs draft order generation**: Executes `draft_order.py` with the generated seed, which records the seed next to the order it produced
+4. **Logs all information**: Prints commit hash, timestamp, seed, and draft order output
+5. **Commits changes**: Commits everything under `data/<season>/`
 
 ### Permissions
 The workflow needs `contents: write` to push its commit. The repository default for the workflow token is read-only, under which the `git push` fails fatally with exit code 128.
 
-### What It Does
-1. **Sets up the environment**: uv provisions the Python pinned in `.python-version` plus the locked dependencies
-2. **Generates a deterministic seed**: Combines commit hash and runtime timestamp
-3. **Runs draft order generation**: Executes `draft_order.py` with the generated seed
-4. **Logs all information**: Prints commit hash, timestamp, seed, and draft order output
-5. **Records the season seed**: Writes the seed to `data/seed.txt`
-6. **Commits changes**: Automatically commits the new `data/draft_order.csv` and `data/seed.txt` files
+Because the trigger is a closed pull request, the checkout has to name `base.ref` explicitly. `github.ref` points at the pull request's merge ref on that event, which cannot be pushed to.
 
 ### Seed Generation
-The seed is deterministic and generated as follows:
-- Takes the first 8 characters of the commit hash
+The seed is generated as follows:
+- Takes the first 8 characters of the merge commit hash
 - Converts it to decimal
 - Adds the current Unix timestamp
-- Because the timestamp is part of it, the seed differs on every run — rerunning the same commit does *not* reproduce the same draft order. What makes a draw reproducible after the fact is the seed being committed to `data/seed.txt`.
-
-### Output
-The workflow logs will show:
-- Commit Hash
-- Runtime Timestamp  
-- Generated Seed
-- Complete draft order output (position and player for each pick)
+- Because the timestamp is part of it, the seed differs on every run. What makes a draw reproducible after the fact is the seed being committed to `data/<season>/seed.txt`.
 
 ### Files Modified
-- `data/draft_order.csv` - Updated with new draft order
-- `data/seed.txt` - The season seed, reused by the division and schedule draws
+- `data/<season>/draft_order.csv` - The drawn order
+- `data/<season>/seed.txt` - The season seed, reused by the division and schedule draws
+
+### Redraw Protection
+A season that has been drawn is final: `draft_order.py` exits rather than overwrite an existing `data/<season>/seed.txt`. This holds no matter how the workflow was started, which a trigger alone cannot guarantee. To draw again, either bump `data/season.txt` to a new season or pass `--force` deliberately.
 
 ### Division and Schedule Draws
-These stay out of CI and are run locally after pulling the workflow's commit. They read `data/seed.txt`, so they use the same CI-drawn season seed without it having to be copied out of the workflow logs. Each draw salts the seed differently — see `season_seed.py`. 
+These stay out of CI and are run locally after pulling the workflow's commit. They read `data/<season>/seed.txt`, so they use the same CI-drawn season seed without it having to be copied out of the workflow logs. Each draw salts the seed differently — see `season_seed.py`.

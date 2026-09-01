@@ -3,7 +3,7 @@ import pandas as pd
 import argparse
 import time
 
-from season_seed import resolve_seed
+from season_seed import read_season, resolve_seed, season_path
 
 def assign_pairings_to_weeks(assignable_weeks, players_list, pairings, seed):
     random.seed(seed)
@@ -40,9 +40,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     base_seed, draw_seed = resolve_seed('schedule', args.seed)
-    print(f'Season seed: {base_seed} (schedule draw seed: {draw_seed})')
+    print(f'Season {read_season()} | seed: {base_seed} (schedule draw seed: {draw_seed})')
 
-    division_mapping_df = pd.read_csv('data/division_mapping.csv')
+    division_mapping_df = pd.read_csv(season_path('division_mapping.csv'))
     players_list = list(division_mapping_df.player)
     division_count = len(division_mapping_df.division.unique())
 
@@ -69,5 +69,5 @@ if __name__ == '__main__':
     full_schedule += schedule_second_part
     
     schedule_df = pd.DataFrame(full_schedule, columns = ['week', 'pairing'])
-    schedule_df.to_csv('data/schedule.csv', index=False)
+    schedule_df.to_csv(season_path('schedule.csv'), index=False)
     
